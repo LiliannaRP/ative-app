@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ative</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F3FAF9;
+    --surface: #FFFFFF;
+    --border: #DCEAE8;
+    --text: #1B2B29;
+    --text-secondary: #5C7370;
+    --accent: #008066;
+    --accent-dark: #00594A;
+    --accent-light: #E0F0ED;
+    --danger: #B3261E;
+    --danger-light: #FBEAE9;
+    --warn: #8A6D00;
+    --warn-light: #FDF6DC;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Public Sans', -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1, h2, h3, .brand { font-family: 'Newsreader', serif; }
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 88px;
+    position: relative;
+  }
+  header.topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 20px 10px;
+  }
+  .logo-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px; flex-shrink: 0;
+  }
+  header.topbar .brand { font-size: 22px; font-weight: 700; color: var(--accent-dark); }
+  header.topbar .sub { font-size: 12px; color: var(--text-secondary); margin-left: auto; text-align: right; }
+
+  main { padding: 4px 16px 16px; }
+  section.view { display: none; }
+  section.view.active { display: block; animation: fadein .18s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px);} to {opacity:1; transform:none;} }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: var(--text); }
+  .card h2 small { display:block; font-family:'Public Sans',sans-serif; font-weight:400; color: var(--text-secondary); font-size: 12px; margin-top: 2px;}
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat {
+    background: var(--accent-light);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .stat .val { font-family:'Newsreader',serif; font-size: 24px; font-weight: 700; color: var(--accent-dark); line-height:1.1; }
+  .stat .lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+  .progress-track { background: var(--accent-light); border-radius: 999px; height: 10px; overflow: hidden; margin: 8px 0; }
+  .progress-fill { background: var(--accent); height: 100%; border-radius: 999px; transition: width .3s ease; }
+
+  button, .btn {
+    font-family: 'Public Sans', sans-serif;
+    border: none; border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:active { background: var(--accent-dark); }
+  .btn-block { width: 100%; }
+  .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-sm { padding: 8px 12px; font-size: 13px; }
+  .btn[disabled] { opacity: .55; pointer-events: none; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .chip {
+    background: var(--accent-light); color: var(--accent-dark);
+    border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600;
+    border: 1px solid transparent; cursor: pointer;
+  }
+  .chip.active { background: var(--accent); color: #fff; }
+
+  label { display:block; font-size: 12px; color: var(--text-secondary); margin: 10px 0 4px; font-weight: 600;}
+  input[type=number], input[type=text], input[type=date], select {
+    width: 100%; padding: 11px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg);
+    font-size: 15px; color: var(--text); font-family: 'Public Sans',sans-serif;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .tabbar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    z-index: 10;
+  }
+  .tabbar button {
+    flex: 1; background: none; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    color: var(--text-secondary); font-size: 11px; font-weight: 600; padding: 8px 2px;
+  }
+  .tabbar button .ic { font-size: 18px; }
+  .tabbar button.active { color: var(--accent-dark); background: var(--accent-light); }
+
+  .subtabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .subtabs button { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary); }
+  .subtabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .list-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .d { color: var(--text-secondary); font-size: 12px; }
+
+  .exercicio-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--accent-light); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px;
+  }
+  .exercicio-item button { background: none; color: var(--danger); padding: 4px 8px; font-size: 12px; }
+
+  .banner {
+    border-radius: 12px; padding: 12px 14px; font-size: 13px; margin-bottom: 12px;
+  }
+  .banner.ok { background: var(--accent-light); color: var(--accent-dark); }
+  .banner.warn { background: var(--warn-light); color: var(--warn); }
+  .banner.error { background: var(--danger-light); color: var(--danger); }
+  .banner.info { background: #EAF1FD; color: #1D4ED8; }
+
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--accent-dark); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s, bottom .25s;
+    max-width: 90%; text-align: center;
+  }
+  .toast.show { opacity: 1; bottom: 100px; }
+
+  .badge { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .badge.alto { background: var(--danger-light); color: var(--danger); }
+  .badge.medio { background: var(--warn-light); color: var(--warn); }
+  .badge.baixo { background: var(--accent-light); color: var(--accent-dark); }
+
+  ul.plain { margin: 6px 0; padding-left: 18px; font-size: 13.5px; line-height: 1.55; }
+  .muted { color: var(--text-secondary); font-size: 13px; }
+  .spinner {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 3px solid var(--accent-light); border-top-color: var(--accent);
+    animation: spin .7s linear infinite; margin: 24px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .center { text-align: center; }
+  .row-2 { display:flex; gap:10px; }
+  .row-2 > * { flex:1; }
+
+  #gate {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; padding: 24px;
+  }
+  .gate-box {
+    max-width: 320px; width: 100%; text-align: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 28px 24px;
+  }
+  .gate-box input { text-align: center; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-box">
+    <div class="logo-dot" style="width:44px;height:44px;font-size:22px;margin:0 auto 14px">🌿</div>
+    <h1 style="margin:0 0 4px;font-size:22px;color:var(--accent-dark)">Ative</h1>
+    <p class="muted" style="margin:0 0 18px">Acesso restrito. Digite a senha para continuar.</p>
+    <input type="password" id="gate-senha" placeholder="Senha" autocomplete="off">
+    <button class="btn btn-primary btn-block" id="gate-btn" style="margin-top:12px">Entrar</button>
+    <p id="gate-erro" class="banner error" style="display:none;margin-top:12px">Senha incorreta.</p>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+
+  <header class="topbar">
+    <div class="logo-dot">🌿</div>
+    <div class="brand">Ative</div>
+    <div class="sub" id="hoje-label"></div>
+  </header>
+
+  <main>
+
+    <!-- INÍCIO -->
+    <section class="view active" id="view-inicio">
+      <div id="inicio-content"><div class="spinner"></div></div>
+    </section>
+
+    <!-- REGISTRAR -->
+    <section class="view" id="view-registrar">
+      <div class="subtabs">
+        <button class="active" data-sub="agua">Água</button>
+        <button data-sub="peso">Peso</button>
+        <button data-sub="treino">Treino</button>
+      </div>
+
+      <div class="subview active" id="sub-agua">
+        <div class="card">
+          <h2>Registrar água</h2>
+          <div class="chip-row" id="agua-chips">
+            <button class="chip" data-ml="100">100 ml</button>
+            <button class="chip" data-ml="200">200 ml</button>
+            <button class="chip" data-ml="300">300 ml</button>
+            <button class="chip" data-ml="500">500 ml</button>
+            <button class="chip" data-ml="700">700 ml</button>
+          </div>
+          <label>Ou valor livre (ml)</label>
+          <input type="number" id="agua-livre" placeholder="Ex: 250" min="1">
+          <button class="btn btn-primary btn-block" style="margin-top:14px" id="btn-registrar-agua">Registrar</button>
+        </div>
+      </div>
+
+      <div class="subview" id="sub-peso" style="display:none">
+        <div class="card">
+          <h2>Registrar peso</h2>
+          <label>Peso (kg)</label>
+          <input type="number" id="peso-valor" step="0.1" placeholder="Ex: 91.5">
+          <label>Observação (opcional)</label>
+          <input type="text" id="peso-obs" placeholder="Ex: em jejum">
+          <button class="btn btn-primary btn-block" style="margin-top:14px" id="btn-registrar-peso">Registrar</button>
+        </div>
+      </div>
+
+      <div class="subview" id="sub-treino" style="display:none">
+        <div class="card">
+          <h2>Adicionar exercício</h2>
+          <div id="treino-form"><div class="spinner"></div></div>
+        </div>
+        <div class="card" id="treino-lista-card" style="display:none">
+          <h2>Treino de hoje</h2>
+          <div id="treino-lista"></div>
+          <button class="btn btn-primary btn-block" style="margin-top:8px" id="btn-enviar-treino">Enviar treino</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section class="view" id="view-historico">
+      <div id="historico-content"><div class="spinner"></div></div>
+    </section>
+
+    <!-- ANÁLISE -->
+    <section class="view" id="view-analise">
+      <div class="card">
+        <h2>Análise da semana<small>Motor determinístico — não é diagnóstico médico</small></h2>
+        <button class="btn btn-primary btn-block" id="btn-gerar-analise">Gerar análise dos últimos 7 dias</button>
+      </div>
+      <div id="analise-content"></div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="active" data-view="inicio"><span class="ic">🏠</span>Início</button>
+    <button data-view="registrar"><span class="ic">➕</span>Registrar</button>
+    <button data-view="historico"><span class="ic">📈</span>Histórico</button>
+    <button data-view="analise"><span class="ic">✨</span>Análise</button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* =========================================================================
+   Ative — app web funcional (Etapa 6, versão enxuta)
+   Fala diretamente com o backend real (Google Apps Script Web App).
+   Sem manifest / service worker ainda — isso vem numa segunda etapa,
+   depois da validação funcional.
+   ========================================================================= */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzJ5zakcwUAvvMftBQ2Kbm82Dl4siBoGpFara9vbKsO5ZShY43zZ1IIVLExe8mOtaug/exec';
+
+function fmtData(d){ return d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' }); }
+document.getElementById('hoje-label').textContent = fmtData(new Date());
+
+function toast(msg, ms=2600){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), ms);
+}
+
+async function api(action, opts={}){
+  const { body=null, params=null } = opts;
+  let url = API_URL + '?action=' + encodeURIComponent(action);
+  if (params) for (const k in params) if (params[k]!==undefined) url += '&' + k + '=' + encodeURIComponent(params[k]);
+  let res;
+  try{
+    if (body){
+      res = await fetch(url, {
+        method: 'POST',
+        // text/plain evita pre-flight CORS (Apps Script não trata OPTIONS)
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, ...body })
+      });
+    } else {
+      res = await fetch(url);
+    }
+  } catch(err){
+    throw new Error('Falha de conexão. Verifique sua internet e tente de novo.');
+  }
+  let json;
+  try { json = await res.json(); }
+  catch(err){ throw new Error('Resposta inesperada do servidor.'); }
+  if (!json.ok) throw new Error(json.error || 'Erro desconhecido no backend.');
+  return json.data;
+}
+
+function newId(){
+  return 'c_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+}
+
+/* ---------- navegação principal ---------- */
+const views = ['inicio','registrar','historico','analise'];
+function irPara(view){
+  views.forEach(v=>{
+    document.getElementById('view-'+v).classList.toggle('active', v===view);
+  });
+  document.querySelectorAll('.tabbar button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view===view);
+  });
+  if (view==='inicio') carregarInicio();
+  if (view==='historico') carregarHistorico();
+  if (view==='registrar' && !window.__tiposCarregados) carregarTiposExercicio();
+}
+document.querySelectorAll('.tabbar button').forEach(b=>{
+  b.addEventListener('click', ()=>irPara(b.dataset.view));
+});
+
+/* ---------- sub-tabs de Registrar ---------- */
+document.querySelectorAll('.subtabs button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.subtabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    ['agua','peso','treino'].forEach(s=>{
+      document.getElementById('sub-'+s).style.display = (s===b.dataset.sub) ? 'block' : 'none';
+    });
+  });
+});
+
+/* ================= INÍCIO ================= */
+async function carregarInicio(){
+  const el = document.getElementById('inicio-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try{
+    const [resumo, semanal] = await Promise.all([ api('resumoDiario'), api('resumoSemanal') ]);
+    const metaAgua = 2000;
+    const pctAgua = Math.min(100, Math.round(100*resumo.aguaMl/metaAgua));
+    el.innerHTML = `
+      <div class="card">
+        <h2>Água hoje</h2>
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="stat .val" style="font-family:'Newsreader',serif;font-size:26px;font-weight:700;color:var(--accent-dark)">${resumo.aguaMl} ml</span>
+          <span class="muted">meta ${metaAgua} ml</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pctAgua}%"></div></div>
+        <button class="btn btn-primary btn-block" id="btn-agua-rapida">+300 ml</button>
+      </div>
+      <div class="card">
+        <h2>Esta semana</h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="val">${semanal.treinos}</div><div class="lbl">dias com treino</div></div>
+          <div class="stat"><div class="val">${semanal.pesoVariacaoKg>0?'+':''}${semanal.pesoVariacaoKg} kg</div><div class="lbl">variação de peso</div></div>
+          <div class="stat"><div class="val">${semanal.aguaMediaDiariaMl} ml</div><div class="lbl">média água/dia</div></div>
+          <div class="stat"><div class="val">${semanal.cardioSessoes}</div><div class="lbl">sessões cardio</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Hoje</h2>
+        <div class="list-row"><span>Exercícios de força</span><b>${resumo.exerciciosForca}</b></div>
+        <div class="list-row"><span>Sessões de cardio</span><b>${resumo.cardioSessoes}</b></div>
+        <div class="list-row"><span>Minutos em Zona 2</span><b>${resumo.cardioZona2Min} min</b></div>
+      </div>`;
+    document.getElementById('btn-agua-rapida').addEventListener('click', async (e)=>{
+      e.target.disabled = true;
+      try{
+        await api('registrarAgua', { body: { idClient:newId(), volumeMl:300, tipoRegistro:'Botão rápido (+300ml)' } });
+        toast('💧 +300 ml registrados');
+        carregarInicio();
+      } catch(err){ toast('Erro: '+err.message); e.target.disabled=false; }
+    });
+  } catch(err){
+    el.innerHTML = `<div class="banner error">Não consegui carregar seus dados: ${err.message}</div>`;
+  }
+}
+
+/* ================= REGISTRAR — ÁGUA ================= */
+let aguaSelecionada = null;
+document.querySelectorAll('#agua-chips .chip').forEach(c=>{
+  c.addEventListener('click', ()=>{
+    document.querySelectorAll('#agua-chips .chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    aguaSelecionada = Number(c.dataset.ml);
+    document.getElementById('agua-livre').value = '';
+  });
+});
+document.getElementById('agua-livre').addEventListener('input', ()=>{
+  aguaSelecionada = null;
+  document.querySelectorAll('#agua-chips .chip').forEach(x=>x.classList.remove('active'));
+});
+document.getElementById('btn-registrar-agua').addEventListener('click', async (e)=>{
+  const livre = Number(document.getElementById('agua-livre').value);
+  const volume = aguaSelecionada || livre;
+  if (!volume || volume<=0){ toast('Escolha ou digite uma quantidade de água.'); return; }
+  e.target.disabled = true;
+  try{
+    await api('registrarAgua', { body:{ idClient:newId(), volumeMl:volume, tipoRegistro: aguaSelecionada?('Botão rápido (+'+volume+'ml)'):'Manual' } });
+    toast('💧 Água registrada: '+volume+' ml');
+    aguaSelecionada = null;
+    document.querySelectorAll('#agua-chips .chip').forEach(x=>x.classList.remove('active'));
+    document.getElementById('agua-livre').value = '';
+  } catch(err){ toast('Erro: '+err.message); }
+  e.target.disabled = false;
+});
+
+/* ================= REGISTRAR — PESO ================= */
+document.getElementById('btn-registrar-peso').addEventListener('click', async (e)=>{
+  const peso = Number(document.getElementById('peso-valor').value);
+  if (!peso){ toast('Digite um peso válido.'); return; }
+  e.target.disabled = true;
+  try{
+    await api('registrarPeso', { body:{ idClient:newId(), pesoKg:peso, observacao:document.getElementById('peso-obs').value||'' } });
+    toast('⚖️ Peso registrado: '+peso+' kg');
+    document.getElementById('peso-valor').value = '';
+    document.getElementById('peso-obs').value = '';
+  } catch(err){ toast('Erro: '+err.message); }
+  e.target.disabled = false;
+});
+
+/* ================= REGISTRAR — TREINO ================= */
+let tiposExercicio = [];
+let treinoItens = [];
+
+async function carregarTiposExercicio(){
+  const form = document.getElementById('treino-form');
+  try{
+    tiposExercicio = await api('listarTiposExercicio');
+    window.__tiposCarregados = true;
+    renderTreinoForm();
+  } catch(err){
+    form.innerHTML = `<div class="banner error">Não consegui carregar a lista de exercícios: ${err.message}</div>`;
+  }
+}
+
+function categoriaTipoRegistro(tr){
+  if (!tr) return 'forca';
+  if (tr.indexOf('Quilometragem') > -1) return 'corrida';
+  if (tr.indexOf('Tempo') > -1) return 'cardio';
+  return 'forca';
+}
+
+function renderTreinoForm(){
+  const form = document.getElementById('treino-form');
+  const categorias = [...new Set(tiposExercicio.map(t=>t.Categoria))];
+  form.innerHTML = `
+    <label>Categoria</label>
+    <select id="tf-categoria">${categorias.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+    <label>Exercício</label>
+    <select id="tf-exercicio"></select>
+    <div id="tf-campos"></div>
+    <button class="btn btn-primary btn-block" style="margin-top:14px" id="btn-add-exercicio">Adicionar à lista</button>
+  `;
+  const selCat = document.getElementById('tf-categoria');
+  const selEx = document.getElementById('tf-exercicio');
+  function popularExercicios(){
+    const cat = selCat.value;
+    const opcoes = tiposExercicio.filter(t=>t.Categoria===cat);
+    selEx.innerHTML = opcoes.map(o=>`<option value="${o.Nome_Exercicio}" data-tr="${o.Tipo_Registro}">${o.Nome_Exercicio}</option>`).join('');
+    popularCampos();
+  }
+  function popularCampos(){
+    const opt = selEx.selectedOptions[0];
+    const tr = opt ? opt.dataset.tr : '';
+    const tipo = categoriaTipoRegistro(tr);
+    const campos = document.getElementById('tf-campos');
+    if (tipo==='forca'){
+      campos.innerHTML = `
+        <div class="row-2">
+          <div><label>Séries</label><input type="number" id="tf-series" min="1" placeholder="Ex: 3"></div>
+          <div><label>Carga (kg, opcional)</label><input type="number" id="tf-carga" step="0.5"></div>
+        </div>
+        <label>Repetições por série (separadas por vírgula)</label>
+        <input type="text" id="tf-reps" placeholder="Ex: 15,12,10">`;
+    } else if (tipo==='cardio'){
+      campos.innerHTML = `
+        <div class="row-2">
+          <div><label>Tempo (min)</label><input type="number" id="tf-tempo" min="1"></div>
+          <div><label>Calorias</label><input type="number" id="tf-cal" min="0"></div>
+        </div>
+        <div class="row-2">
+          <div><label>Passos</label><input type="number" id="tf-passos" min="0"></div>
+          <div><label>Min. em Zona 2</label><input type="number" id="tf-zona2" min="0"></div>
+        </div>`;
+    } else {
+      campos.innerHTML = `
+        <div class="row-2">
+          <div><label>Quilometragem (km)</label><input type="number" id="tf-km" step="0.01" min="0"></div>
+          <div><label>Pace médio (mm:ss)</label><input type="text" id="tf-pace" placeholder="Ex: 6:15"></div>
+        </div>
+        <div class="row-2">
+          <div><label>Calorias</label><input type="number" id="tf-cal" min="0"></div>
+          <div><label>Min. em Zona 2</label><input type="number" id="tf-zona2" min="0"></div>
+        </div>`;
+    }
+  }
+  selCat.addEventListener('change', popularExercicios);
+  selEx.addEventListener('change', popularCampos);
+  popularExercicios();
+
+  document.getElementById('btn-add-exercicio').addEventListener('click', ()=>{
+    const opt = selEx.selectedOptions[0];
+    if (!opt) return;
+    const tr = opt.dataset.tr;
+    const tipo = categoriaTipoRegistro(tr);
+    const item = {
+      idClient: newId(),
+      categoria: selCat.value,
+      nomeExercicio: opt.value,
+    };
+    if (tipo==='forca'){
+      const reps = (document.getElementById('tf-reps').value||'').split(',').map(s=>Number(s.trim())).filter(n=>n>0);
+      if (!document.getElementById('tf-series').value || !reps.length){ toast('Preencha séries e repetições.'); return; }
+      item.series = Number(document.getElementById('tf-series').value);
+      item.repeticoesPorSerie = reps;
+      item.cargaKg = document.getElementById('tf-carga').value || '';
+      item._resumo = `${item.series} séries · ${reps.join('+')} reps`;
+    } else if (tipo==='cardio'){
+      item.tempoMin = document.getElementById('tf-tempo').value || '';
+      item.calorias = document.getElementById('tf-cal').value || '';
+      item.passos = document.getElementById('tf-passos').value || '';
+      item.tempoZona2Min = document.getElementById('tf-zona2').value || '';
+      item._resumo = `${item.tempoMin||'?'} min · ${item.calorias||0} cal`;
+    } else {
+      item.quilometragemKm = document.getElementById('tf-km').value || '';
+      item.paceMedio = document.getElementById('tf-pace').value || '';
+      item.calorias = document.getElementById('tf-cal').value || '';
+      item.tempoZona2Min = document.getElementById('tf-zona2').value || '';
+      item._resumo = `${item.quilometragemKm||'?'} km · pace ${item.paceMedio||'?'}`;
+    }
+    treinoItens.push(item);
+    renderTreinoLista();
+    toast('Exercício adicionado à lista.');
+  });
+}
+
+function renderTreinoLista(){
+  const card = document.getElementById('treino-lista-card');
+  const el = document.getElementById('treino-lista');
+  if (!treinoItens.length){ card.style.display='none'; return; }
+  card.style.display = 'block';
+  el.innerHTML = treinoItens.map((it,i)=>`
+    <div class="exercicio-item">
+      <span><b>${it.nomeExercicio}</b><br><span class="muted">${it._resumo}</span></span>
+      <button data-i="${i}">remover</button>
+    </div>`).join('');
+  el.querySelectorAll('button[data-i]').forEach(b=>{
+    b.addEventListener('click', ()=>{ treinoItens.splice(Number(b.dataset.i),1); renderTreinoLista(); });
+  });
+}
+
+document.getElementById('btn-enviar-treino').addEventListener('click', async (e)=>{
+  if (!treinoItens.length){ toast('Adicione ao menos um exercício.'); return; }
+  e.target.disabled = true;
+  try{
+    const itens = treinoItens.map(({_resumo, ...rest})=>rest);
+    await api('registrarTreino', { body:{ itens } });
+    toast('✅ Treino registrado com sucesso.');
+    treinoItens = [];
+    renderTreinoLista();
+  } catch(err){ toast('Erro: '+err.message); }
+  e.target.disabled = false;
+});
+
+/* ================= HISTÓRICO ================= */
+async function carregarHistorico(){
+  const el = document.getElementById('historico-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try{
+    const [semanal, pesos] = await Promise.all([ api('resumoSemanal'), api('historicoPeso') ]);
+    const ultimosPesos = pesos
+      .slice()
+      .sort((a,b)=> parseDataBR(b.Data) - parseDataBR(a.Data))
+      .slice(0,8);
+    el.innerHTML = `
+      <div class="card">
+        <h2>Resumo — últimos 7 dias<small>${semanal.periodo.inicio} a ${semanal.periodo.fim}</small></h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="val">${semanal.totalSeries}</div><div class="lbl">séries de força</div></div>
+          <div class="stat"><div class="val">${semanal.totalRepeticoes}</div><div class="lbl">repetições</div></div>
+          <div class="stat"><div class="val">${semanal.cardioTempoMin} min</div><div class="lbl">tempo de cardio</div></div>
+          <div class="stat"><div class="val">${semanal.aguaTotalMl} ml</div><div class="lbl">água total</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Últimos pesos registrados</h2>
+        ${ultimosPesos.length ? ultimosPesos.map(p=>`
+          <div class="list-row"><span>${p.Data}${p.Observacao?' · <span class="d">'+p.Observacao+'</span>':''}</span><b>${p.Peso_kg} kg</b></div>
+        `).join('') : '<p class="muted">Nenhum peso registrado ainda.</p>'}
+      </div>`;
+  } catch(err){
+    el.innerHTML = `<div class="banner error">Não consegui carregar o histórico: ${err.message}</div>`;
+  }
+}
+function parseDataBR(s){
+  const [d,m,y] = (s||'01/01/2000').split('/').map(Number);
+  return new Date(y,m-1,d);
+}
+
+/* ================= ANÁLISE ================= */
+document.getElementById('btn-gerar-analise').addEventListener('click', async (e)=>{
+  const el = document.getElementById('analise-content');
+  e.target.disabled = true;
+  el.innerHTML = '<div class="spinner"></div>';
+  try{
+    const a = await api('analiseSemanal');
+    if (!a || a.sem_dados || (a.dados_utilizados===undefined && a.score_performance===undefined)){
+      el.innerHTML = `<div class="banner info">Ainda não há dados suficientes nesta semana para gerar uma análise.</div>`;
+      e.target.disabled = false;
+      return;
+    }
+    const nivel = (a.sub_scores ? 'baixo' : 'baixo');
+    el.innerHTML = `
+      <div class="card">
+        <h2>Score de desempenho</h2>
+        <div class="stat" style="max-width:140px"><div class="val">${a.score_performance ?? '—'}</div><div class="lbl">confiança: ${a.nivel_confianca || '—'}</div></div>
+        <p style="margin-top:12px">${a.resumo || ''}</p>
+      </div>
+      ${a.alertas && a.alertas.length ? `<div class="banner warn"><b>Alertas</b><ul class="plain">${a.alertas.map(x=>`<li>${x.mensagem||x}</li>`).join('')}</ul></div>` : ''}
+      ${a.pontos_positivos && a.pontos_positivos.length ? `<div class="card"><h2>Pontos positivos</h2><ul class="plain">${a.pontos_positivos.map(x=>`<li>${x}</li>`).join('')}</ul></div>` : ''}
+      ${a.pontos_atencao && a.pontos_atencao.length ? `<div class="card"><h2>Pontos de atenção</h2><ul class="plain">${a.pontos_atencao.map(x=>`<li>${x}</li>`).join('')}</ul></div>` : ''}
+      ${a.recomendacoes && a.recomendacoes.length ? `<div class="card"><h2>Recomendações</h2><ul class="plain">${a.recomendacoes.map(x=>`<li>${x}</li>`).join('')}</ul></div>` : ''}
+      <p class="muted center" style="margin-top:4px">Análise determinística, sem IA externa. Não substitui avaliação médica/profissional.</p>
+    `;
+  } catch(err){
+    el.innerHTML = `<div class="banner error">Não consegui gerar a análise: ${err.message}</div>`;
+  }
+  e.target.disabled = false;
+});
+
+/* ---------- tela de senha ----------
+   Trava simples contra acesso casual — NÃO é segurança forte (o código
+   roda no navegador, então é sempre inspecionável por quem realmente
+   quiser). O hash evita só que a senha apareça em texto puro no
+   código-fonte. */
+const GATE_HASH = '95c9b864dd38814deedfaea5bfcda36b256448cf1f1731d4cd5d89872e1a114e';
+const GATE_KEY = 'ative_unlocked_v1';
+
+async function sha256Hex(texto){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function liberarApp(){
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  carregarInicio();
+}
+
+async function tentarEntrar(){
+  const val = document.getElementById('gate-senha').value;
+  const hash = await sha256Hex(val);
+  if (hash === GATE_HASH){
+    try { localStorage.setItem(GATE_KEY, '1'); } catch(e){}
+    document.getElementById('gate-erro').style.display = 'none';
+    liberarApp();
+  } else {
+    document.getElementById('gate-erro').style.display = 'block';
+  }
+}
+document.getElementById('gate-btn').addEventListener('click', tentarEntrar);
+document.getElementById('gate-senha').addEventListener('keydown', (e)=>{ if (e.key==='Enter') tentarEntrar(); });
+
+/* ---------- boot ---------- */
+let jaDesbloqueado = false;
+try { jaDesbloqueado = localStorage.getItem(GATE_KEY) === '1'; } catch(e){}
+if (jaDesbloqueado){
+  liberarApp();
+} else {
+  document.getElementById('gate-senha').focus();
+}
+</script>
+</body>
+</html>
