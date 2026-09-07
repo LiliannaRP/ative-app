@@ -530,9 +530,11 @@ function renderTreinoForm(){
           <div><label>Pace médio (mm:ss)</label><input type="text" id="tf-pace" placeholder="Ex: 6:15"></div>
         </div>
         <div class="row-2">
+          <div><label>Tempo de corrida (min)</label><input type="number" id="tf-tempo-corrida" min="0"></div>
           <div><label>Calorias</label><input type="number" id="tf-cal" min="0"></div>
-          <div><label>Min. em Zona 2</label><input type="number" id="tf-zona2" min="0"></div>
-        </div>`;
+        </div>
+        <label>Min. em Zona 2</label>
+        <input type="number" id="tf-zona2" min="0">`;
     }
   }
   selCat.addEventListener('change', popularExercicios);
@@ -565,9 +567,10 @@ function renderTreinoForm(){
     } else {
       item.quilometragemKm = document.getElementById('tf-km').value || '';
       item.paceMedio = document.getElementById('tf-pace').value || '';
+      item.tempoMin = document.getElementById('tf-tempo-corrida').value || '';
       item.calorias = document.getElementById('tf-cal').value || '';
       item.tempoZona2Min = document.getElementById('tf-zona2').value || '';
-      item._resumo = `${item.quilometragemKm||'?'} km · pace ${item.paceMedio||'?'}`;
+      item._resumo = `${item.quilometragemKm||'?'} km · pace ${item.paceMedio||'?'}${item.tempoMin ? ' · '+item.tempoMin+' min' : ''}`;
     }
     treinoItens.push(item);
     renderTreinoLista();
