@@ -256,6 +256,7 @@
       <div class="subview active" id="sub-agua">
         <div class="card">
           <h2>Registrar água</h2>
+          <div id="agua-total-hoje" class="muted" style="margin-bottom:12px">Carregando total de hoje…</div>
           <div class="chip-row" id="agua-chips">
             <button class="chip" data-ml="100">100 ml</button>
             <button class="chip" data-ml="200">200 ml</button>
@@ -421,6 +422,7 @@ function irPara(view){
   if (view==='inicio') carregarInicio();
   if (view==='historico') carregarHistorico();
   if (view==='registrar' && !window.__tiposCarregados) carregarTiposExercicio();
+  if (view==='registrar') atualizarTotalAguaHoje();
 }
 document.querySelectorAll('.tabbar button').forEach(b=>{
   b.addEventListener('click', ()=>irPara(b.dataset.view));
@@ -434,8 +436,28 @@ document.querySelectorAll('.subtabs button').forEach(b=>{
     ['agua','peso','treino'].forEach(s=>{
       document.getElementById('sub-'+s).style.display = (s===b.dataset.sub) ? 'block' : 'none';
     });
+    if (b.dataset.sub === 'agua') atualizarTotalAguaHoje();
   });
 });
+
+/* ---------- total de água de hoje, mostrado ao vivo na tela de Registrar ---------- */
+async function atualizarTotalAguaHoje(){
+  const el = document.getElementById('agua-total-hoje');
+  if (!el) return;
+  try{
+    const [resumo, pesos] = await Promise.all([ api('resumoDiario'), api('historicoPeso') ]);
+    const pesoAtual = obterPesoAtual(pesos);
+    const metaAgua = calcularMetaAgua(pesoAtual.valor);
+    const restante = metaAgua - resumo.aguaMl;
+    const aguaInfo = classificarAgua(resumo.aguaMl, metaAgua);
+    const texto = restante > 0
+      ? `Faltam ${restante} ml para a meta`
+      : (aguaInfo.label === 'Acima da meta' ? `Meta ultrapassada em ${Math.abs(restante)} ml` : `Meta batida! 🎉`);
+    el.innerHTML = `<b style="color:var(--accent-dark)">${resumo.aguaMl} ml</b> hoje de ${metaAgua} ml · ${texto}`;
+  } catch(err){
+    el.textContent = 'Não consegui carregar o total de hoje.';
+  }
+}
 
 /* ================= INÍCIO ================= */
 async function carregarInicio(){
@@ -449,8 +471,16 @@ async function carregarInicio(){
     const imcInfo = classificarIMC(imc);
 
     const metaAgua = calcularMetaAgua(pesoAtual.valor);
-    const pctAgua = Math.min(100, Math.round(100*resumo.aguaMl/metaAgua));
+    const restanteAgua = metaAgua - resumo.aguaMl;
+    // Barra "de contagem regressiva": começa cheia (100% = meta inteira por beber)
+    // e vai esvaziando conforme a água registrada se aproxima/passa da meta.
+    const pctBarraRestante = Math.max(0, Math.min(100, Math.round(100*restanteAgua/metaAgua)));
     const aguaInfo = classificarAgua(resumo.aguaMl, metaAgua);
+    const textoRestante = restanteAgua > 0
+      ? `Faltam ${restanteAgua} ml para a meta`
+      : (aguaInfo.label === 'Acima da meta'
+          ? `Meta ultrapassada em ${Math.abs(restanteAgua)} ml`
+          : `Meta batida! 🎉`);
 
     el.innerHTML = `
       <div class="card">
@@ -468,7 +498,8 @@ async function carregarInicio(){
           <span class="stat .val" style="font-family:'Newsreader',serif;font-size:26px;font-weight:700;color:var(--accent-dark)">${resumo.aguaMl} ml</span>
           <span class="muted">meta ${metaAgua} ml (peso × 35 ml)</span>
         </div>
-        <div class="progress-track"><div class="progress-fill" style="width:${pctAgua}%;background:${aguaInfo.color}"></div></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pctBarraRestante}%;background:${aguaInfo.color}"></div></div>
+        <p class="muted" style="margin:6px 0 0">${textoRestante}</p>
         <span class="badge-classif" style="background:${aguaInfo.color};margin-top:6px;display:inline-block">${aguaInfo.label}</span>
         <button class="btn btn-primary btn-block" style="margin-top:14px" id="btn-agua-rapida">+300 ml</button>
       </div>
@@ -525,6 +556,7 @@ document.getElementById('btn-registrar-agua').addEventListener('click', async (e
     aguaSelecionada = null;
     document.querySelectorAll('#agua-chips .chip').forEach(x=>x.classList.remove('active'));
     document.getElementById('agua-livre').value = '';
+    atualizarTotalAguaHoje();
   } catch(err){ toast('Erro: '+err.message); }
   e.target.disabled = false;
 });
